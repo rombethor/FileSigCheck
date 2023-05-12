@@ -2,6 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Daniel James Thorne</Authors>
+    <Copyright>Daniel James Thorne (c) 2021</Copyright>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl></PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rombethor/FileSigCheck</RepositoryUrl>
+    <PackageId>Rombethor.FileSigCheck</PackageId>
+    <Description>Checks file byte signatures and filename extensions to determine valid files.  Typically useful for uploading files via web API, it can 'help' filter potentially malicious files.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
 </Project>
