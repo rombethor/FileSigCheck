@@ -43,7 +43,44 @@ namespace FileSigCheck
             { 
                 ".gif", new List<byte?[]>()
                 {
-                    new byte?[] { 0x47, 0x49, 0x46, 0x38 }
+                    new byte?[] { 0x47, 0x49, 0x46, 0x38, 0x37, 0x61 },
+                    new byte?[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61 }
+                }
+            },
+            {
+                //Tagged image file format
+                ".tif", new List<byte?[]>()
+                {
+                    //little-endian
+                    new byte?[] { 0x49, 0x49, 0x2A, 0x00 },
+                    //big-endian
+                    new byte?[] { 0x4D, 0x4D, 0x00, 0x2A },
+                    //BigTIFF little-endian
+                    new byte?[] { 0x49, 0x49, 0x2B, 0x00 },
+                    //BigTIFF big-endian
+                    new byte?[] { 0x4D, 0x4D, 0x00, 0x2B }
+                }
+            },
+            {
+                //Tagged image file format
+                ".tiff", new List<byte?[]>()
+                {
+                    //little-endian
+                    new byte?[] { 0x49, 0x49, 0x2A, 0x00 },
+                    //big-endian
+                    new byte?[] { 0x4D, 0x4D, 0x00, 0x2A },
+                    //BigTIFF little-endian
+                    new byte?[] { 0x49, 0x49, 0x2B, 0x00 },
+                    //BigTIFF big-endian
+                    new byte?[] { 0x4D, 0x4D, 0x00, 0x2B }
+                }
+            },
+            {
+                // Google WebP image file
+                ".webp", new List<byte?[]>()
+                {
+                    // Wildcard bytes here actually indicate the file size
+                    new byte?[] { 0x52, 0x49, 0x46, 0x46, null, null, null, null, 0x57, 0x45, 0x52, 0x50 }
                 }
             },
             { 
@@ -100,6 +137,12 @@ namespace FileSigCheck
                     new byte?[] { 0x50, 0x4B, 0x03, 0x04 }
                 }
             },
+            {
+                ".rtf", new List<byte?[]>()
+                {
+                    new byte?[] { 0x7B, 0x5C, 0x72, 0x74, 0x66, 0x31 }
+                }
+            },
             { 
                 ".pdf", new List<byte?[]>()
                 {
@@ -147,6 +190,31 @@ namespace FileSigCheck
                 ".xml", new List<byte?[]>()
                 {
                     new byte?[] { 0x3C, 0x3F, 0x78, 0x6D, 0x6C, 0x20, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6F, 0x6E, 0x3D }
+                }
+            },
+            {
+                ".rar", new List<byte?[]>()
+                {
+                    //v1.5+
+                    new byte?[] { 0x52, 0x61, 0x72, 0x21, 0x1A, 0x07, 0x00 },
+                    //v5+
+                    new byte?[] { 0x52, 0x61, 0x72, 0x21, 0x1A, 0x07, 0x01, 0x00 }
+                }
+            },
+            {
+                ".exe", new List<byte?[]>()
+                {
+                    // DOS MZ Executable
+                    new byte?[] { 0x4D, 0x5A },
+                    // DOS ZM Executable (rare)
+                    new byte?[] { 0x5A, 0x4D }
+                }
+            },
+            {
+                //blender model file
+                ".blend", new List<byte?[]>()
+                {
+                    new byte?[] { 0x42, 0x4C, 0x45, 0x4E, 0x44, 0x45, 0x52 }
                 }
             }
         };
