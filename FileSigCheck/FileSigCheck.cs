@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace FileSigCheck
 {
@@ -31,10 +30,25 @@ namespace FileSigCheck
             //if matches a file signature, allow it to pass
             foreach (var picType in FileSignatures.Signatures.Where(f => exts.Contains(f.Key)))
             {
-                foreach (var sig in picType.Value)
+                foreach (var signature in picType.Value)
                 {
-                    if (data.Take(sig.Length).SequenceEqual(sig))
-                        return true;
+                    byte[] headerbytes = data.Take(signature.Length).ToArray();
+                    bool matched = true;
+                    for (int i = 0; i < signature.Length; i++)
+                    {
+                        //treat null as wildcard
+                        if (signature[i] is null)
+                            continue;
+
+                        if (signature[i] != headerbytes[i])
+                        {
+                            matched = false;
+                            break;
+                        }
+                    }
+
+                    // Only one signature pattern needs matching
+                    if (matched) return true;
                 }
             }
             //no signature matched, not a valid image
@@ -83,7 +97,28 @@ namespace FileSigCheck
                     throw new InvalidDataException($"File signature for {ext} has not been provided!  Rejecting file!");
                 var signatures = FileSignatures.Signatures[ext];
                 var headerbytes = reader.ReadBytes(signatures.Max(s => s.Length));
-                return signatures.Any(s => headerbytes.Take(s.Length).SequenceEqual(s));
+                foreach (var signature in signatures)
+                {
+                    bool matched = true;
+                    for (int i = 0; i < signature.Length; i++)
+                    {
+                        //treat null as wildcard
+                        if (signature[i] is null)
+                            continue;
+
+                        if (signature[i] != headerbytes[i])
+                        {
+                            matched = false;
+                            break;
+                        }
+                    }
+
+                    // Only one signature pattern needs matching
+                    if (matched) return true;
+                }
+
+                // No signature patterns matched
+                return false;
             }
         }
 
