@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -9,50 +8,69 @@ namespace FileSigCheck
     {
 
         /// <summary>
-        /// Check to see if base64 string is a base64 image (png, jpg/jpeg or gif)!
+        /// (Experimental) Check if a Data URI content is valid using the file signature.
+        /// Note, it only works for some image and audio formats.
         /// </summary>
-        /// <param name="b64">The base64 data</param>
-        /// <returns>True if a valid png, jpg or gif image.  False otherwise.</returns>
-        public static bool IsValidBase64Image(string b64)
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        /// <exception cref="FormatException">URI received is not a valid Data URI</exception>
+        public static bool IsDataUriSignatureValid(string uri)
         {
-            if (b64.StartsWith("data:"))
+            if (!uri.StartsWith("data:"))
+                throw new FormatException("Not a valid data uri");
+
+            string mimeType = uri.Substring(5, uri.IndexOf(';') - 5);
+
+            bool isBase64 = uri.Contains(";base64,");
+
+            int commaIndex = uri.IndexOf(',');
+            if (commaIndex == 0)
             {
-                int commaIndex = b64.IndexOf(',');
-                if (commaIndex > 0)
-                    b64 = b64.Substring(commaIndex + 1);
+                throw new FormatException("Data URI format invalid");
             }
-            //get bytes
-            byte[] data = Convert.FromBase64String(b64);
 
-            //image extensions
-            var exts = new List<string>() { ".png", ".jpg", ".jpeg", ".gif" };
-
-            //if matches a file signature, allow it to pass
-            foreach (var picType in FileSignatures.Signatures.Where(f => exts.Contains(f.Key)))
+            var data = uri.Substring(commaIndex + 1);
+            using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(data)))
             {
-                foreach (var signature in picType.Value)
+                switch(mimeType)
                 {
-                    byte[] headerbytes = data.Take(signature.Length).ToArray();
-                    bool matched = true;
-                    for (int i = 0; i < signature.Length; i++)
-                    {
-                        //treat null as wildcard
-                        if (signature[i] is null)
-                            continue;
-
-                        if (signature[i] != headerbytes[i])
-                        {
-                            matched = false;
-                            break;
-                        }
-                    }
-
-                    // Only one signature pattern needs matching
-                    if (matched) return true;
-                }
+                    case "image/png":
+                        return IsFileSignatureValid(ms, ".png");
+                    case "image/jpeg":
+                        return IsFileSignatureValid(ms, ".jpg", ".jpeg");
+                    case "image/gif":
+                        return IsFileSignatureValid(ms, ".gif");
+                    case "image/tiff":
+                        return IsFileSignatureValid(ms, ".tiff");
+                    case "audio/mpeg":
+                        return IsFileSignatureValid(ms, ".mpg");
+                    case "audio/ogg":
+                        return IsFileSignatureValid(ms, ".ogg");
+                    default:
+                        return false; //Indeterminate result!
+                };
             }
-            //no signature matched, not a valid image
-            return false;
+        }
+
+        /// <summary>
+        /// Check a file signature based on the filename's extension
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidDataException"></exception>
+        public static bool IsFileSignatureValid(string filename, Stream data)
+        {
+            if (string.IsNullOrWhiteSpace(filename) || data == null || data.Length == 0)
+            {
+                return false;
+            }
+
+            var ext = Path.GetExtension(filename).ToLowerInvariant();
+            if (!FileSignatures.Signatures.ContainsKey(ext))
+                throw new InvalidDataException($"File signature for {ext} has not been provided!  Rejecting file!");
+
+            return IsFileSignatureValid(data, ext);
         }
 
         /// <summary>
@@ -63,58 +81,47 @@ namespace FileSigCheck
         /// <param name="filename">Name of the file</param>
         /// <param name="data">A stream of the file's data</param>
         /// <param name="permittedExtensions">A list of extensions permitted in the file name</param>
+        /// <exception cref="ArgumentException">Thrown if a value in permitted signature is not within the keys of <see cref="FileSignatures.Signatures"/></exception>
         /// <exception cref="InvalidDataException">Thrown when the file signature is not provided in this library.</exception>
         /// <returns></returns>
-        public static bool IsValidFileSignature(string filename, Stream data, string[] permittedExtensions)
+        public static bool IsFileSignatureValid(Stream data, params string[] permittedExtensions)
         {
-            if (string.IsNullOrWhiteSpace(filename) || data == null || data.Length == 0)
-            {
-                return false;
-            }
-
-            var ext = Path.GetExtension(filename).ToLowerInvariant();
-
-            if (string.IsNullOrEmpty(ext) || !permittedExtensions.Contains(ext))
-                return false;
-
-            data.Position = 0;
+            if (permittedExtensions.Except(FileSignatures.Signatures.Select(s => s.Key)).Any())
+                throw new ArgumentException("Not all permitted extensions are valid", nameof(permittedExtensions));
 
             using (var reader = new BinaryReader(data))
             {
-                //These files have no signature, so limit encoding to ASCII characters
-                if (ext.Equals(".txt") || ext.Equals(".csv") || ext.Equals(".prn"))
-                {
-                    for (var i = 0; i < data.Length; i++)
-                    {
-                        var b = reader.ReadByte();
-                        if (b > sbyte.MaxValue)
-                            return false;
-                    }
+                //Only read the bytes we need
+                int maxLen = FileSignatures.Signatures
+                    .Where(s => permittedExtensions.Contains(s.Key))
+                    .SelectMany(s => s.Value)
+                    .Max(s => s.Length);
 
-                    return true;
-                }
-                if (!FileSignatures.Signatures.ContainsKey(ext))
-                    throw new InvalidDataException($"File signature for {ext} has not been provided!  Rejecting file!");
-                var signatures = FileSignatures.Signatures[ext];
-                var headerbytes = reader.ReadBytes(signatures.Max(s => s.Length));
-                foreach (var signature in signatures)
-                {
-                    bool matched = true;
-                    for (int i = 0; i < signature.Length; i++)
-                    {
-                        //treat null as wildcard
-                        if (signature[i] is null)
-                            continue;
+                var headerbytes = reader.ReadBytes(maxLen);
 
-                        if (signature[i] != headerbytes[i])
+                // Loop through extensions and their file signatures
+                foreach (var ext in permittedExtensions)
+                {
+                    var signatures = FileSignatures.Signatures[ext];
+                    foreach (var signature in signatures)
+                    {
+                        bool matched = true;
+                        for (int i = 0; i < signature.Length; i++)
                         {
-                            matched = false;
-                            break;
-                        }
-                    }
+                            //treat null as wildcard
+                            if (signature[i] is null)
+                                continue;
 
-                    // Only one signature pattern needs matching
-                    if (matched) return true;
+                            if (signature[i] != headerbytes[i])
+                            {
+                                matched = false;
+                                break;
+                            }
+                        }
+
+                        // Only one signature pattern needs matching
+                        if (matched) return true;
+                    }
                 }
 
                 // No signature patterns matched
