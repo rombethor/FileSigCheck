@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -6,12 +6,28 @@
     <Authors>Daniel James Thorne</Authors>
     <Copyright>Daniel James Thorne (c) 2021</Copyright>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageProjectUrl></PackageProjectUrl>
+    <PackageProjectUrl>https://djt-software.com/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rombethor/FileSigCheck</RepositoryUrl>
-    <PackageId>Rombethor.FileSigCheck</PackageId>
+    <PackageId>FileSigCheck</PackageId>
     <Description>Checks file byte signatures and filename extensions to determine valid files.  Typically useful for uploading files via web API, it can 'help' filter potentially malicious files.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>1.1.0</Version>
+    <Version>2.0.1</Version>
+    <Title>File Signature Checker</Title>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PackageTags>file;signature;check;checker;validation;verification;file type;file format</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>DJT_software_logo.png</PackageIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\DJT_software_logo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
