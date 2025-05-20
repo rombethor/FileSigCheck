@@ -4,7 +4,10 @@ using System.Linq;
 
 namespace FileSigCheck
 {
-    public static class FileSigCheck
+    /// <summary>
+    /// Utility methods for checking file signatures from streams or Data URIs
+    /// </summary>
+    public static class FileSignatureUtil
     {
 
         /// <summary>
