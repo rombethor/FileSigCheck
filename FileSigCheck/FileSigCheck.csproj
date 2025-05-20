@@ -11,7 +11,7 @@
     <PackageId>FileSigCheck</PackageId>
     <Description>Checks file byte signatures and filename extensions to determine valid files.  Typically useful for uploading files via web API, it can 'help' filter potentially malicious files.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>1.1.0</Version>
+    <Version>2.0.1</Version>
     <Title>File Signature Checker</Title>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <PackageTags>file;signature;check;checker;validation;verification;file type;file format</PackageTags>
