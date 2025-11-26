@@ -53,6 +53,29 @@ Currently, it only works for image/jpeg, image/png, image/gif, image/tiff, audio
 
 ### Usage
 
+It is now recommendable to use the `FileSignatureStream` to check against file signatures in streams.  
+
+The following example demonstrates how to use it to check an image "myImage.png" and save it if the signature matches the permitted image file types (determined by their extensions):
+
+```c#
+using FileStream outbound = new FileStream("checkedImage.png", FileMode.Create, FileAccess.Write);
+
+using FileSignatureStream signatureStream = new FileSignatureStream(filestream, new string[] { ".png", ".jpg", ".jpeg" });
+
+using FileStream filestream = new FileStream("myImage.png", FileMode.Open, FileAccess.Read);
+
+try{
+    filestream.CopyTo(signatureStream);
+}
+catch (FileSignatureException ex)
+{
+    Console.WriteLine($"File signature check failed: {ex.Message}");
+    // Handle the exception as needed, e.g., log it or notify the user
+}
+```
+
+### Other usage
+
 Once you have a file stream accessible, if you want to check against the file name's extension, use:
 
 `bool result = FileSignatureUtil.IsFileSignatureValid("myImage.png", filestream);`
